@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DESMAN - Red Social Nocturna</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .login-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tagline {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #999;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: bold;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+        }
+
+        .success {
+            background: #efe;
+            color: #3c3;
+        }
+
+        .feed-page {
+            display: none;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header .logo {
+            font-size: 24px;
+            color: white;
+            text-shadow: none;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            overflow: hidden;
+            border: 2px solid white;
+        }
+
+        .profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .profile-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .profile-pic-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            font-weight: bold;
+            margin: 0 auto 20px;
+            overflow: hidden;
+            border: 4px solid #667eea;
+        }
+
+        .profile-pic-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-username {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .stat {
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .stat:hover {
+            opacity: 0.7;
+        }
+
+        .stat-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .upload-photo-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+
+        .create-post {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .create-post h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .post-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .char-count {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .posts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .post {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .post-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .post-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .post-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .post-username {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .post-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .follow-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .follow-btn.following {
+            background: #eee;
+            color: #666;
+        }
+
+        .follow-btn:hover {
+            opacity: 0.8;
+        }
+
+        .post-content {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .post-actions-bar {
+            display: flex;
+            gap: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            color: #667eea;
+        }
+
+        .action-btn.liked {
+            color: #e74c3c;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 99;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .nav-btn.active {
+            opacity: 1;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .close-modal {
+            background: #eee;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .user-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-item-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .user-item-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-item-info {
+            flex: 1;
+        }
+
+        .user-item-name {
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-page" id="loginPage">
+        <div class="login-container">
+            <div class="logo">🎉 DESMAN</div>
+            <div class="tagline">Tu red social nocturna</div>
+
+            <div class="message error" id="errorMsg"></div>
+            <div class="message success" id="successMsg"></div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="showLoginTab()">Iniciar Sesión</button>
+                <button class="tab" onclick="showRegisterTab()">Registrarse</button>
+            </div>
+
+            <div id="loginForm" class="form-section active">
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="tu@email.com">
+                </div>
+                <div class="input-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••">
+                </div>
+                <button class="btn" onclick="handleLogin()">Entrar</button>
+            </div>
+
+            <div id="registerForm" class="form-section">
+                <div class="input-group">
+                    <label>Nombre de usuario</label>
+                    <input type="text" id="regUsername" placeholder="tunombre">
+                </div>
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="tu@email.com">
+                </div>
+                <div class="input-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="regPassword" placeholder="Mínimo 8 caracteres">
+                </div>
+                <button class="btn" onclick="handleRegister()">Crear Cuenta</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="feed-page" id="feedPage">
+        <div class="header">
+            <div class="logo">🎉 DESMAN</div>
+            <div class="user-info">
+                <div class="profile-pic" id="headerProfilePic" onclick="showSection('profile')">?</div>
+                <button class="logout-btn" onclick="logout()">Salir</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="profileSection" style="display:none;">
+                <div class="profile-card">
+                    <div class="profile-pic-large" id="profilePicLarge">?</div>
+                    <div class="profile-username" id="profileUsername">Usuario</div>
+                    <div class="profile-stats">
+                        <div class="stat" onclick="showModal('posts')">
+                            <div class="stat-number" id="postsCount">0</div>
+                            <div class="stat-label">Cotilleos</div>
+                        </div>
+                        <div class="stat" onclick="showFollowers()">
+                            <div class="stat-number" id="followersCount">0</div>
+                            <div class="stat-label">Seguidores</div>
+                        </div>
+                        <div class="stat" onclick="showFollowing()">
+                            <div class="stat-number" id="followingCount">0</div>
+                            <div class="stat-label">Siguiendo</div>
+                        </div>
+                    </div>
+                    <input type="file" id="photoUpload" accept="image/*" onchange="uploadPhoto()">
+                    <button class="upload-photo-btn" onclick="document.getElementById('photoUpload').click()">
+                        📸 Cambiar foto de perfil
+                    </button>
+                </div>
+            </div>
+
+            <div id="feedSection">
+                <div class="create-post">
+                    <h3>¿Qué está pasando? 🔥</h3>
+                    <textarea 
+                        class="post-input" 
+                        id="postContent" 
+                        placeholder="Comparte un cotilleo..." 
+                        maxlength="280"></textarea>
+                    <div class="post-actions">
+                        <span class="char-count" id="charCount">0/280</span>
+                        <button class="btn" onclick="createPost()">Publicar</button>
+                    </div>
+                </div>
+
+                <div class="posts-container" id="postsContainer"></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-btn active" onclick="showSection('feed')">🏠</button>
+            <button class="nav-btn" onclick="showSection('profile')">👤</button>
+        </div>
+    </div>
+
+    <div class="modal" id="followModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">Usuarios</div>
+            <div id="modalUserList"></div>
+            <button class="close-modal" onclick="closeModal()">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let users = [];
+        let posts = [];
+
+        function init() {
+            users = JSON.parse(localStorage.getItem('desmanUsers') || '[]');
+            posts = JSON.parse(localStorage.getItem('desmanPosts') || '[]');
+            
+            users = users.map(u => {
+                if (!u.followers) u.followers = [];
+                if (!u.following) u.following = [];
+                return u;
+            });
+            localStorage.setItem('desmanUsers', JSON.stringify(users));
+            
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                const userIndex = users.findIndex(u => u.id === currentUser.id);
+                if (userIndex > -1) {
+                    currentUser = users[userIndex];
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+                showFeed();
+            }
+        }
+
+        function showLoginTab() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('loginForm').classList.add('active');
+            document.getElementById('registerForm').classList.remove('active');
+            hideMessages();
+        }
+
+        function showRegisterTab() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('registerForm').classList.add('active');
+            document.getElementById('loginForm').classList.remove('active');
+            hideMessages();
+        }
+
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showError('Por favor completa todos los campos');
+                return;
+            }
+
+            const user = users.find(u => u.email === email && u.password === password);
+
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                showSuccess('¡Bienvenido! Entrando...');
+                setTimeout(showFeed, 1000);
+            } else {
+                showError('Email o contraseña incorrectos');
+            }
+        }
+
+        function handleRegister() {
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            if (!username || !email || !password) {
+                showError('Por favor completa todos los campos');
+                return;
+            }
+
+            if (password.length < 8) {
+                showError('La contraseña debe tener al menos 8 caracteres');
+                return;
+            }
+
+            if (users.find(u => u.email === email)) {
+                showError('Este email ya está registrado');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now(),
+                username: username,
+                email: email,
+                password: password,
+                createdAt: new Date().toISOString(),
+                profilePic: null,
+                followers: [],
+                following: []
+            };
+
+            users.push(newUser);
+            localStorage.setItem('desmanUsers', JSON.stringify(users));
+
+            showSuccess('¡Cuenta creada! Ya puedes iniciar sesión');
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regPassword').value = '';
+            
+            setTimeout(showLoginTab, 2000);
+        }
+
+        function showFeed() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('feedPage').style.display = 'block';
+            updateProfilePics();
+            loadPosts();
+        }
+
+        function updateProfilePics() {
+            const initial = currentUser.username.charAt(0).toUpperCase();
+            
+            if (currentUser.profilePic) {
+                document.getElementById('headerProfilePic').innerHTML = `<img src="${currentUser.profilePic}" alt="Perfil">`;
+                document.getElementById('profilePicLarge').innerHTML = `<img src="${currentUser.profilePic}" alt="Perfil">`;
+            } else {
+                document.getElementById('headerProfilePic').textContent = initial;
+                document.getElementById('profilePicLarge').textContent = initial;
+            }
+            
+            document.getElementById('profileUsername').textContent = '@' + currentUser.username;
+            const userPosts = posts.filter(p => p.userId === currentUser.id);
+            document.getElementById('postsCount').textContent = userPosts.length;
+            document.getElementById('followersCount').textContent = currentUser.followers.length;
+            document.getElementById('followingCount').textContent = currentUser.following.length;
+        }
+
+        function uploadPhoto() {
+            const file = document.getElementById('photoUpload').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentUser.profilePic = e.target.result;
+                
+                const userIndex = users.findIndex(u => u.id === currentUser.id);
+                users[userIndex] = currentUser;
+                localStorage.setItem('desmanUsers', JSON.stringify(users));
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                updateProfilePics();
+                loadPosts();
+                showSuccess('¡Foto actualizada!');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function toggleFollow(userId) {
+            const targetUser = users.find(u => u.id === userId);
+            if (!targetUser || userId === currentUser.id) return;
+
+            const isFollowing = currentUser.following.includes(userId);
+
+            if (isFollowing) {
+                currentUser.following = currentUser.following.filter(id => id !== userId);
+                targetUser.followers = targetUser.followers.filter(id => id !== currentUser.id);
+            } else {
+                currentUser.following.push(userId);
+                targetUser.followers.push(currentUser.id);
+            }
+
+            const currentUserIndex = users.findIndex(u => u.id === currentUser.id);
+            const targetUserIndex = users.findIndex(u => u.id === userId);
+            
+            users[currentUserIndex] = currentUser;
+            users[targetUserIndex] = targetUser;
+            
+            localStorage.setItem('desmanUsers', JSON.stringify(users));
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            updateProfilePics();
+            loadPosts();
+        }
+
+        function createPost() {
+            const content = document.getElementById('postContent').value.trim();
+            if (!content) return;
+
+            const newPost = {
+                id: Date.now(),
+                userId: currentUser.id,
+                username: currentUser.username,
+                profilePic: currentUser.profilePic,
+                content: content,
+                timestamp: new Date().toISOString(),
+                likes: 0,
+                likedBy: []
+            };
+
+            posts.unshift(newPost);
+            localStorage.setItem('desmanPosts', JSON.stringify(posts));
+
+            document.getElementById('postContent').value = '';
+            document.getElementById('charCount').textContent = '0/280';
+            loadPosts();
+            updateProfilePics();
+        }
+
+        function loadPosts() {
+            const container = document.getElementById('postsContainer');
+            
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No hay cotilleos aún</h3><p>¡Sé el primero en compartir!</p></div>';
+                return;
+            }
+
+            container.innerHTML = posts.map(post => {
+                const isLiked = post.likedBy.includes(currentUser.id);
+                const timeAgo = getTimeAgo(post.timestamp);
+                const isOwnPost = post.userId === currentUser.id;
+                const isFollowing = currentUser.following.includes(post.userId);
+                
+                let avatarContent;
+                if (post.profilePic) {
+                    avatarContent = `<img src="${post.profilePic}" alt="${post.username}">`;
+                } else {
+                    avatarContent = post.username.charAt(0).toUpperCase();
+                }
+
+                let followButton = '';
+                if (!isOwnPost) {
+                    followButton = `<button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow(${post.userId})">
+                        ${isFollowing ? 'Siguiendo' : 'Seguir'}
+                    </button>`;
+                }
+
+                return `
+                    <div class="post">
+                        <div class="post-header">
+                            <div class="post-user">
+                                <div class="post-avatar">${avatarContent}</div>
+                                <div>
+                                    <div class="post-username">@${post.username}</div>
+                                    <div class="post-time">${timeAgo}</div>
+                                </div>
+                            </div>
+                            ${followButton}
+                        </div>
+                        <div class="post-content">${post.content}</div>
+                        <div class="post-actions-bar">
+                            <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${post.id})">
+                                ${isLiked ? '❤️' : '🤍'} ${post.likes}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleLike(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+
+            const likedIndex = post.likedBy.indexOf(currentUser.id);
+            
+            if (likedIndex > -1) {
+                post.likedBy.splice(likedIndex, 1);
+                post.likes--;
+            } else {
+                post.likedBy.push(currentUser.id);
+                post.likes++;
+            }
+
+            localStorage.setItem('desmanPosts', JSON.stringify(posts));
+            loadPosts();
+        }
+
+        function showFollowers() {
+            const modal = document.getElementById('followModal');
+            const title = document.getElementById('modalTitle');
+            const list = document.getElementById('modalUserList');
+            
+            title.textContent = 'Seguidores';
+            
+            if (currentUser.followers.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>Aún no tienes seguidores</p></div>';
+            } else {
+                list.innerHTML = currentUser.followers.map(followerId => {
+                    const follower = users.find(u => u.id === followerId);
+                    if (!follower) return '';
+                    
+                    let avatarContent;
+                    if (follower.profilePic) {
+                        avatarContent = `<img src="${follower.profilePic}" alt="${follower.username}">`;
+                    } else {
+                        avatarContent = follower.username.charAt(0).toUpperCase();
+                    }
+                    
+                    return `
+                        <div class="user-item">
+                            <div class="user-item-avatar">${avatarContent}</div>
+                            <div class="user-item-info">
+                                <div class="user-item-name">@${follower.username}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function showFollowing() {
+            const modal = document.getElementById('followModal');
+            const title = document.getElementById('modalTitle');
+            const list = document.getElementById('modalUserList');
+            
+            title.textContent = 'Siguiendo';
+            
+            if (currentUser.following.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>No sigues a nadie aún</p></div>';
+            } else {
+                list.innerHTML = currentUser.following.map(followingId => {
+                    const following = users.find(u => u.id === followingId);
+                    if (!following) return '';
+                    
+                    let avatarContent;
+                    if (following.profilePic) {
+                        avatarContent = `<img src="${following.profilePic}" alt="${following.username}">`;
+                    } else {
+                        avatarContent = following.username.charAt(0).toUpperCase();
+                    }
+                    
+                    return `
+                        <div class="user-item">
+                            <div class="user-item-avatar">${avatarContent}</div>
+                            <div class="user-item-info">
+                                <div class="user-item-name">@${following.username}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('followModal').classList.remove('active');
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (section === 'feed') {
+                document.getElementById('feedSection').style.display = 'block';
+                document.getElementById('profileSection').style.display = 'none';
+            } else if (section === 'profile') {
+                document.getElementById('feedSection').style.display = 'none';
+                document.getElementById('profileSection').style.display = 'block';
+                updateProfilePics();
+            }
+        }
+
+        function logout() {
+            if (confirm('¿Seguro que quieres salir?')) {
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+                document.getElementById('feedPage').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('loginEmail').value = '';
+                document.getElementById('loginPassword').value = '';
+            }
+        }
+
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const postDate = new Date(timestamp);
+            const diffMs = now - postDate;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            
+            if (diffMins < 1) return 'Ahora';
+            if (diffMins < 60) return `Hace ${diffMins}m`;
+            if (diffHours < 24) return `Hace ${diffHours}h`;
+            return postDate.toLocaleDateString();
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 4000);
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 4000);
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMsg').style.display = 'none';
+            document.getElementById('successMsg').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+            const input = document.getElementById('postContent');
+            if (input) {
+                input.addEventListener('input', () => {
+                    document.getElementById('charCount').textContent = input.value.length + '/280';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
