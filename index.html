@@ -353,6 +353,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            cursor: pointer;
+        }
+
+        .post-user:hover {
+            opacity: 0.8;
         }
 
         .post-avatar {
@@ -523,6 +528,91 @@
             font-size: 14px;
         }
 
+        .search-section {
+            display: none;
+        }
+
+        .search-box {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-results {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .user-result {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .user-result:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .user-result-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .user-result-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-result-info {
+            flex: 1;
+        }
+
+        .user-result-name {
+            font-weight: bold;
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .user-result-stats {
+            font-size: 13px;
+            color: #999;
+        }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -645,6 +735,17 @@
             font-weight: bold;
             color: #333;
         }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -693,9 +794,12 @@
 
     <div class="feed-page" id="feedPage">
         <div class="header">
-            <div class="logo">🎉 DESMAN</div>
+            <div style="display:flex; align-items:center;">
+                <button class="back-btn" id="backBtn" style="display:none;" onclick="goBack()">← Volver</button>
+                <div class="logo">🎉 DESMAN</div>
+            </div>
             <div class="user-info">
-                <div class="profile-pic" id="headerProfilePic" onclick="showSection('profile')">?</div>
+                <div class="profile-pic" id="headerProfilePic" onclick="showMyProfile()">?</div>
                 <button class="logout-btn" onclick="logout()">Salir</button>
             </div>
         </div>
@@ -710,20 +814,18 @@
                             <div class="stat-number" id="postsCount">0</div>
                             <div class="stat-label">Cotilleos</div>
                         </div>
-                        <div class="stat" onclick="showFollowers()">
+                        <div class="stat" onclick="showFollowersModal()">
                             <div class="stat-number" id="followersCount">0</div>
                             <div class="stat-label">Seguidores</div>
                         </div>
-                        <div class="stat" onclick="showFollowing()">
+                        <div class="stat" onclick="showFollowingModal()">
                             <div class="stat-number" id="followingCount">0</div>
                             <div class="stat-label">Siguiendo</div>
                         </div>
                     </div>
-                    <input type="file" id="photoUpload" accept="image/*" onchange="uploadPhoto()">
-                    <button class="upload-photo-btn" onclick="document.getElementById('photoUpload').click()">
-                        📸 Cambiar foto de perfil
-                    </button>
+                    <div id="profileActions"></div>
                 </div>
+                <div class="posts-container" id="userPostsContainer"></div>
             </div>
 
             <div id="feedSection">
@@ -742,11 +844,19 @@
 
                 <div class="posts-container" id="postsContainer"></div>
             </div>
+
+            <div id="searchSection" class="search-section">
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar usuarios..." oninput="searchUsers()">
+                </div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
         </div>
 
         <div class="bottom-nav">
             <button class="nav-btn active" onclick="showSection('feed')">🏠</button>
-            <button class="nav-btn" onclick="showSection('profile')">👤</button>
+            <button class="nav-btn" onclick="showSection('search')">🔍</button>
+            <button class="nav-btn" onclick="showMyProfile()">👤</button>
         </div>
     </div>
 
@@ -762,6 +872,7 @@
         let currentUser = null;
         let users = [];
         let posts = [];
+        let viewingUserId = null;
 
         function init() {
             users = JSON.parse(localStorage.getItem('desmanUsers') || '[]');
@@ -875,26 +986,18 @@
         function showFeed() {
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('feedPage').style.display = 'block';
-            updateProfilePics();
+            updateHeaderPic();
             loadPosts();
         }
 
-        function updateProfilePics() {
+        function updateHeaderPic() {
             const initial = currentUser.username.charAt(0).toUpperCase();
             
             if (currentUser.profilePic) {
                 document.getElementById('headerProfilePic').innerHTML = `<img src="${currentUser.profilePic}" alt="Perfil">`;
-                document.getElementById('profilePicLarge').innerHTML = `<img src="${currentUser.profilePic}" alt="Perfil">`;
             } else {
                 document.getElementById('headerProfilePic').textContent = initial;
-                document.getElementById('profilePicLarge').textContent = initial;
             }
-            
-            document.getElementById('profileUsername').textContent = '@' + currentUser.username;
-            const userPosts = posts.filter(p => p.userId === currentUser.id);
-            document.getElementById('postsCount').textContent = userPosts.length;
-            document.getElementById('followersCount').textContent = currentUser.followers.length;
-            document.getElementById('followingCount').textContent = currentUser.following.length;
         }
 
         function uploadPhoto() {
@@ -910,8 +1013,8 @@
                 localStorage.setItem('desmanUsers', JSON.stringify(users));
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
-                updateProfilePics();
-                loadPosts();
+                showUserProfile(currentUser.id);
+                updateHeaderPic();
                 showSuccess('¡Foto actualizada!');
             };
             reader.readAsDataURL(file);
@@ -940,8 +1043,11 @@
             localStorage.setItem('desmanUsers', JSON.stringify(users));
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
-            updateProfilePics();
-            loadPosts();
+            if (viewingUserId) {
+                showUserProfile(viewingUserId);
+            } else {
+                loadPosts();
+            }
         }
 
         function createPost() {
@@ -966,7 +1072,6 @@
             document.getElementById('postContent').value = '';
             document.getElementById('charCount').textContent = '0/280';
             loadPosts();
-            updateProfilePics();
         }
 
         function toggleComments(postId) {
@@ -996,7 +1101,11 @@
             localStorage.setItem('desmanPosts', JSON.stringify(posts));
 
             input.value = '';
-            loadPosts();
+            if (viewingUserId) {
+                loadUserPosts(viewingUserId);
+            } else {
+                loadPosts();
+            }
         }
 
         function loadPosts() {
@@ -1007,80 +1116,94 @@
                 return;
             }
 
-            container.innerHTML = posts.map(post => {
-                const isLiked = post.likedBy.includes(currentUser.id);
-                const timeAgo = getTimeAgo(post.timestamp);
-                const isOwnPost = post.userId === currentUser.id;
-                const isFollowing = currentUser.following.includes(post.userId);
-                
-                let avatarContent;
-                if (post.profilePic) {
-                    avatarContent = `<img src="${post.profilePic}" alt="${post.username}">`;
-                } else {
-                    avatarContent = post.username.charAt(0).toUpperCase();
-                }
+            container.innerHTML = posts.map(post => createPostHTML(post)).join('');
+        }
 
-                let followButton = '';
-                if (!isOwnPost) {
-                    followButton = `<button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow(${post.userId})">
-                        ${isFollowing ? 'Siguiendo' : 'Seguir'}
-                    </button>`;
-                }
+        function loadUserPosts(userId) {
+            const container = document.getElementById('userPostsContainer');
+            const userPosts = posts.filter(p => p.userId === userId);
+            
+            if (userPosts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No hay publicaciones aún</p></div>';
+                return;
+            }
 
-                let commentsHTML = '';
-                if (post.comments && post.comments.length > 0) {
-                    commentsHTML = post.comments.map(comment => {
-                        let commentAvatarContent;
-                        if (comment.profilePic) {
-                            commentAvatarContent = `<img src="${comment.profilePic}" alt="${comment.username}">`;
-                        } else {
-                            commentAvatarContent = comment.username.charAt(0).toUpperCase();
-                        }
+            container.innerHTML = userPosts.map(post => createPostHTML(post)).join('');
+        }
 
-                        return `
-                            <div class="comment">
-                                <div class="comment-avatar">${commentAvatarContent}</div>
-                                <div class="comment-content">
-                                    <div class="comment-username">@${comment.username}</div>
-                                    <div class="comment-text">${comment.content}</div>
-                                    <div class="comment-time">${getTimeAgo(comment.timestamp)}</div>
-                                </div>
+        function createPostHTML(post) {
+            const isLiked = post.likedBy.includes(currentUser.id);
+            const timeAgo = getTimeAgo(post.timestamp);
+            const isOwnPost = post.userId === currentUser.id;
+            const isFollowing = currentUser.following.includes(post.userId);
+            
+            let avatarContent;
+            if (post.profilePic) {
+                avatarContent = `<img src="${post.profilePic}" alt="${post.username}">`;
+            } else {
+                avatarContent = post.username.charAt(0).toUpperCase();
+            }
+
+            let followButton = '';
+            if (!isOwnPost) {
+                followButton = `<button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow(${post.userId})">
+                    ${isFollowing ? 'Siguiendo' : 'Seguir'}
+                </button>`;
+            }
+
+            let commentsHTML = '';
+            if (post.comments && post.comments.length > 0) {
+                commentsHTML = post.comments.map(comment => {
+                    let commentAvatarContent;
+                    if (comment.profilePic) {
+                        commentAvatarContent = `<img src="${comment.profilePic}" alt="${comment.username}">`;
+                    } else {
+                        commentAvatarContent = comment.username.charAt(0).toUpperCase();
+                    }
+
+                    return `
+                        <div class="comment">
+                            <div class="comment-avatar">${commentAvatarContent}</div>
+                            <div class="comment-content">
+                                <div class="comment-username">@${comment.username}</div>
+                                <div class="comment-text">${comment.content}</div>
+                                <div class="comment-time">${getTimeAgo(comment.timestamp)}</div>
                             </div>
-                        `;
-                    }).join('');
-                }
-
-                return `
-                    <div class="post">
-                        <div class="post-header">
-                            <div class="post-user">
-                                <div class="post-avatar">${avatarContent}</div>
-                                <div>
-                                    <div class="post-username">@${post.username}</div>
-                                    <div class="post-time">${timeAgo}</div>
-                                </div>
-                            </div>
-                            ${followButton}
                         </div>
-                        <div class="post-content">${post.content}</div>
-                        <div class="post-actions-bar">
-                            <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${post.id})">
-                                ${isLiked ? '❤️' : '🤍'} ${post.likes}
-                            </button>
-                            <button class="action-btn" onclick="toggleComments(${post.id})">
-                                💬 ${post.comments.length}
-                            </button>
-                        </div>
-                        <div class="comments-section" id="comments-${post.id}">
-                            ${commentsHTML}
-                            <div class="comment-input-container">
-                                <input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Escribe un comentario..." maxlength="200">
-                                <button class="comment-btn" onclick="addComment(${post.id})">Enviar</button>
+                    `;
+                }).join('');
+            }
+
+            return `
+                <div class="post">
+                    <div class="post-header">
+                        <div class="post-user" onclick="showUserProfile(${post.userId})">
+                            <div class="post-avatar">${avatarContent}</div>
+                            <div>
+                                <div class="post-username">@${post.username}</div>
+                                <div class="post-time">${timeAgo}</div>
                             </div>
+                        </div>
+                        ${followButton}
+                    </div>
+                    <div class="post-content">${post.content}</div>
+                    <div class="post-actions-bar">
+                        <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${post.id})">
+                            ${isLiked ? '❤️' : '🤍'} ${post.likes}
+                        </button>
+                        <button class="action-btn" onclick="toggleComments(${post.id})">
+                            💬 ${post.comments.length}
+                        </button>
+                    </div>
+                    <div class="comments-section" id="comments-${post.id}">
+                        ${commentsHTML}
+                        <div class="comment-input-container">
+                            <input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Escribe un comentario..." maxlength="200">
+                            <button class="comment-btn" onclick="addComment(${post.id})">Enviar</button>
                         </div>
                     </div>
-                `;
-            }).join('');
+                </div>
+            `;
         }
 
         function toggleLike(postId) {
@@ -1098,20 +1221,122 @@
             }
 
             localStorage.setItem('desmanPosts', JSON.stringify(posts));
-            loadPosts();
+            if (viewingUserId) {
+                loadUserPosts(viewingUserId);
+            } else {
+                loadPosts();
+            }
         }
 
-        function showFollowers() {
+        function searchUsers() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('searchResults');
+
+            if (!query) {
+                resultsContainer.innerHTML = '<div class="empty-state"><p>Escribe para buscar usuarios...</p></div>';
+                return;
+            }
+
+            const results = users.filter(u => 
+                u.username.toLowerCase().includes(query) && u.id !== currentUser.id
+            );
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="empty-state"><p>No se encontraron usuarios</p></div>';
+                return;
+            }
+
+            resultsContainer.innerHTML = results.map(user => {
+                let avatarContent;
+                if (user.profilePic) {
+                    avatarContent = `<img src="${user.profilePic}" alt="${user.username}">`;
+                } else {
+                    avatarContent = user.username.charAt(0).toUpperCase();
+                }
+
+                const userPosts = posts.filter(p => p.userId === user.id);
+
+                return `
+                    <div class="user-result" onclick="showUserProfile(${user.id})">
+                        <div class="user-result-avatar">${avatarContent}</div>
+                        <div class="user-result-info">
+                            <div class="user-result-name">@${user.username}</div>
+                            <div class="user-result-stats">${userPosts.length} cotilleos • ${user.followers.length} seguidores</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showUserProfile(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+
+            viewingUserId = userId;
+            const isOwnProfile = userId === currentUser.id;
+
+            document.getElementById('feedSection').style.display = 'none';
+            document.getElementById('searchSection').style.display = 'none';
+            document.getElementById('profileSection').style.display = 'block';
+            document.getElementById('backBtn').style.display = 'block';
+
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+            const initial = user.username.charAt(0).toUpperCase();
+            const picLarge = document.getElementById('profilePicLarge');
+            
+            if (user.profilePic) {
+                picLarge.innerHTML = `<img src="${user.profilePic}" alt="Perfil">`;
+            } else {
+                picLarge.textContent = initial;
+            }
+
+            document.getElementById('profileUsername').textContent = '@' + user.username;
+            
+            const userPosts = posts.filter(p => p.userId === userId);
+            document.getElementById('postsCount').textContent = userPosts.length;
+            document.getElementById('followersCount').textContent = user.followers.length;
+            document.getElementById('followingCount').textContent = user.following.length;
+
+            const actionsDiv = document.getElementById('profileActions');
+            if (isOwnProfile) {
+                actionsDiv.innerHTML = `
+                    <input type="file" id="photoUpload" accept="image/*" onchange="uploadPhoto()">
+                    <button class="upload-photo-btn" onclick="document.getElementById('photoUpload').click()">
+                        📸 Cambiar foto de perfil
+                    </button>
+                `;
+            } else {
+                const isFollowing = currentUser.following.includes(userId);
+                actionsDiv.innerHTML = `
+                    <button class="btn" onclick="toggleFollow(${userId})">
+                        ${isFollowing ? 'Dejar de seguir' : 'Seguir'}
+                    </button>
+                `;
+            }
+
+            loadUserPosts(userId);
+        }
+
+        function showMyProfile() {
+            showUserProfile(currentUser.id);
+        }
+
+        function showFollowersModal() {
+            if (!viewingUserId) return;
+            const user = users.find(u => u.id === viewingUserId);
+            if (!user) return;
+
             const modal = document.getElementById('followModal');
             const title = document.getElementById('modalTitle');
             const list = document.getElementById('modalUserList');
             
             title.textContent = 'Seguidores';
             
-            if (currentUser.followers.length === 0) {
-                list.innerHTML = '<div class="empty-state"><p>Aún no tienes seguidores</p></div>';
+            if (user.followers.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>Aún no tiene seguidores</p></div>';
             } else {
-                list.innerHTML = currentUser.followers.map(followerId => {
+                list.innerHTML = user.followers.map(followerId => {
                     const follower = users.find(u => u.id === followerId);
                     if (!follower) return '';
                     
@@ -1123,7 +1348,7 @@
                     }
                     
                     return `
-                        <div class="user-item">
+                        <div class="user-item" onclick="closeModal(); showUserProfile(${follower.id});" style="cursor:pointer;">
                             <div class="user-item-avatar">${avatarContent}</div>
                             <div class="user-item-info">
                                 <div class="user-item-name">@${follower.username}</div>
@@ -1136,17 +1361,21 @@
             modal.classList.add('active');
         }
 
-        function showFollowing() {
+        function showFollowingModal() {
+            if (!viewingUserId) return;
+            const user = users.find(u => u.id === viewingUserId);
+            if (!user) return;
+
             const modal = document.getElementById('followModal');
             const title = document.getElementById('modalTitle');
             const list = document.getElementById('modalUserList');
             
             title.textContent = 'Siguiendo';
             
-            if (currentUser.following.length === 0) {
-                list.innerHTML = '<div class="empty-state"><p>No sigues a nadie aún</p></div>';
+            if (user.following.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>No sigue a nadie aún</p></div>';
             } else {
-                list.innerHTML = currentUser.following.map(followingId => {
+                list.innerHTML = user.following.map(followingId => {
                     const following = users.find(u => u.id === followingId);
                     if (!following) return '';
                     
@@ -1158,7 +1387,7 @@
                     }
                     
                     return `
-                        <div class="user-item">
+                        <div class="user-item" onclick="closeModal(); showUserProfile(${following.id});" style="cursor:pointer;">
                             <div class="user-item-avatar">${avatarContent}</div>
                             <div class="user-item-info">
                                 <div class="user-item-name">@${following.username}</div>
@@ -1175,17 +1404,30 @@
             document.getElementById('followModal').classList.remove('active');
         }
 
+        function goBack() {
+            viewingUserId = null;
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('profileSection').style.display = 'none';
+            showSection('feed');
+        }
+
         function showSection(section) {
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
+            viewingUserId = null;
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('profileSection').style.display = 'none';
+            
             if (section === 'feed') {
                 document.getElementById('feedSection').style.display = 'block';
-                document.getElementById('profileSection').style.display = 'none';
-            } else if (section === 'profile') {
+                document.getElementById('searchSection').style.display = 'none';
+                loadPosts();
+            } else if (section === 'search') {
                 document.getElementById('feedSection').style.display = 'none';
-                document.getElementById('profileSection').style.display = 'block';
-                updateProfilePics();
+                document.getElementById('searchSection').style.display = 'block';
+                document.getElementById('searchInput').value = '';
+                document.getElementById('searchResults').innerHTML = '<div class="empty-state"><p>Escribe para buscar usuarios...</p></div>';
             }
         }
 
@@ -1193,6 +1435,7 @@
             if (confirm('¿Seguro que quieres salir?')) {
                 localStorage.removeItem('currentUser');
                 currentUser = null;
+                viewingUserId = null;
                 document.getElementById('feedPage').style.display = 'none';
                 document.getElementById('loginPage').style.display = 'flex';
                 document.getElementById('loginEmail').value = '';
