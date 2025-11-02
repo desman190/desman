@@ -329,6 +329,57 @@
             font-size: 12px;
         }
 
+        .post-photo-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .photo-upload-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .photo-preview {
+            margin-top: 15px;
+            position: relative;
+            display: none;
+        }
+
+        .photo-preview.active {
+            display: block;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .remove-photo {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
         .posts-container {
             display: flex;
             flex-direction: column;
@@ -411,6 +462,15 @@
             color: #333;
             line-height: 1.6;
             margin-bottom: 15px;
+        }
+
+        .post-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            cursor: pointer;
         }
 
         .post-actions-bar {
@@ -656,7 +716,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.9);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -692,6 +752,36 @@
             cursor: pointer;
             margin-top: 15px;
             width: 100%;
+        }
+
+        .image-modal-content {
+            background: transparent;
+            padding: 0;
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 0;
+        }
+
+        .image-modal-content img {
+            width: 100%;
+            height: auto;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .close-image-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
         }
 
         .user-item {
@@ -836,8 +926,20 @@
                         id="postContent" 
                         placeholder="Comparte un cotilleo..." 
                         maxlength="280"></textarea>
+                    
+                    <div class="photo-preview" id="photoPreview">
+                        <img id="previewImage" src="" alt="Vista previa">
+                        <button class="remove-photo" onclick="removePhoto()">×</button>
+                    </div>
+
                     <div class="post-actions">
-                        <span class="char-count" id="charCount">0/280</span>
+                        <div class="post-photo-actions">
+                            <input type="file" id="postPhotoUpload" accept="image/*" onchange="previewPostPhoto()">
+                            <button class="photo-upload-btn" onclick="document.getElementById('postPhotoUpload').click()">
+                                📸 Foto
+                            </button>
+                            <span class="char-count" id="charCount">0/280</span>
+                        </div>
                         <button class="btn" onclick="createPost()">Publicar</button>
                     </div>
                 </div>
@@ -868,11 +970,19 @@
         </div>
     </div>
 
+    <div class="modal" id="imageModal">
+        <button class="close-image-modal" onclick="closeImageModal()">×</button>
+        <div class="image-modal-content">
+            <img id="modalImage" src="" alt="Imagen">
+        </div>
+    </div>
+
     <script>
         let currentUser = null;
         let users = [];
         let posts = [];
         let viewingUserId = null;
+        let tempPostPhoto = null;
 
         function init() {
             users = JSON.parse(localStorage.getItem('desmanUsers') || '[]');
@@ -886,6 +996,7 @@
 
             posts = posts.map(p => {
                 if (!p.comments) p.comments = [];
+                if (!p.image) p.image = null;
                 return p;
             });
 
@@ -1000,6 +1111,25 @@
             }
         }
 
+        function previewPostPhoto() {
+            const file = document.getElementById('postPhotoUpload').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                tempPostPhoto = e.target.result;
+                document.getElementById('previewImage').src = tempPostPhoto;
+                document.getElementById('photoPreview').classList.add('active');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removePhoto() {
+            tempPostPhoto = null;
+            document.getElementById('photoPreview').classList.remove('active');
+            document.getElementById('postPhotoUpload').value = '';
+        }
+
         function uploadPhoto() {
             const file = document.getElementById('photoUpload').files[0];
             if (!file) return;
@@ -1052,7 +1182,11 @@
 
         function createPost() {
             const content = document.getElementById('postContent').value.trim();
-            if (!content) return;
+            
+            if (!content && !tempPostPhoto) {
+                showError('Escribe algo o añade una foto');
+                return;
+            }
 
             const newPost = {
                 id: Date.now(),
@@ -1060,6 +1194,7 @@
                 username: currentUser.username,
                 profilePic: currentUser.profilePic,
                 content: content,
+                image: tempPostPhoto,
                 timestamp: new Date().toISOString(),
                 likes: 0,
                 likedBy: [],
@@ -1071,6 +1206,7 @@
 
             document.getElementById('postContent').value = '';
             document.getElementById('charCount').textContent = '0/280';
+            removePhoto();
             loadPosts();
         }
 
@@ -1106,6 +1242,15 @@
             } else {
                 loadPosts();
             }
+        }
+
+        function showImageModal(imageSrc) {
+            document.getElementById('modalImage').src = imageSrc;
+            document.getElementById('imageModal').classList.add('active');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
         }
 
         function loadPosts() {
@@ -1151,6 +1296,11 @@
                 </button>`;
             }
 
+            let imageHTML = '';
+            if (post.image) {
+                imageHTML = `<img src="${post.image}" alt="Imagen del post" class="post-image" onclick="showImageModal('${post.image}')">`;
+            }
+
             let commentsHTML = '';
             if (post.comments && post.comments.length > 0) {
                 commentsHTML = post.comments.map(comment => {
@@ -1186,7 +1336,8 @@
                         </div>
                         ${followButton}
                     </div>
-                    <div class="post-content">${post.content}</div>
+                    ${post.content ? `<div class="post-content">${post.content}</div>` : ''}
+                    ${imageHTML}
                     <div class="post-actions-bar">
                         <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike(${post.id})">
                             ${isLiked ? '❤️' : '🤍'} ${post.likes}
