@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DESMAN - Red Social Nocturna</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- PANTALLA DE LOGIN -->
+    <div class="login-page" id="loginPage">
+        <div class="login-container">
+            <div class="logo">🎉 DESMAN</div>
+            <div class="tagline">Tu red social nocturna</div>
+
+            <div class="message error" id="errorMsg"></div>
+            <div class="message success" id="successMsg"></div>
+
+            <div class="tabs">
+                <button class="tab active" id="loginTab">Iniciar Sesión</button>
+                <button class="tab" id="registerTab">Registrarse</button>
+            </div>
+
+            <!-- FORMULARIO LOGIN -->
+            <div id="loginForm" class="form-section active">
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="tu@email.com" autocomplete="email">
+                </div>
+                <div class="input-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <button class="btn" id="loginBtn">Entrar</button>
+            </div>
+
+            <!-- FORMULARIO REGISTRO -->
+            <div id="registerForm" class="form-section">
+                <div class="input-group">
+                    <label>Nombre de usuario</label>
+                    <input type="text" id="regUsername" placeholder="tunombre">
+                </div>
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="tu@email.com" autocomplete="email">
+                </div>
+                <div class="input-group">
+                    <label>Fecha de nacimiento</label>
+                    <input type="date" id="regBirthdate" max="">
+                    <small style="color: #999; font-size: 12px; margin-top: 5px; display: block;">
+                        Debes tener al menos 14 años para usar DESMAN
+                    </small>
+                </div>
+                <div class="input-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="regPassword" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+                </div>
+                <div class="input-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="acceptTerms">
+                        <span style="font-size: 13px;">Acepto los <a href="#" style="color: #667eea;">términos y condiciones</a></span>
+                    </label>
+                </div>
+                <button class="btn" id="registerBtn">Crear Cuenta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL -->
+    <div class="feed-page" id="feedPage" style="display: none;">
+        <!-- HEADER -->
+        <div class="header">
+            <div style="display:flex; align-items:center; gap: 10px;">
+                <button class="back-btn" id="backBtn" style="display:none;">← Volver</button>
+                <div class="logo">🎉 DESMAN</div>
+            </div>
+            <div class="user-info">
+                <div class="profile-pic" id="headerProfilePic">?</div>
+                <button class="logout-btn" id="logoutBtn">Salir</button>
+            </div>
+        </div>
+
+        <!-- CONTENEDOR PRINCIPAL -->
+        <div class="container">
+            <!-- SECCIÓN FEED -->
+            <div id="feedSection">
+                <div class="create-post">
+                    <h3>¿Qué está pasando? 🔥</h3>
+                    <textarea 
+                        class="post-input" 
+                        id="postContent" 
+                        placeholder="Comparte un cotilleo..." 
+                        maxlength="280"></textarea>
+                    
+                    <div class="photo-preview" id="photoPreview">
+                        <img id="previewImage" src="" alt="Vista previa">
+                        <button class="remove-photo" id="removePhotoBtn">×</button>
+                    </div>
+
+                    <div class="post-actions">
+                        <div class="post-photo-actions">
+                            <input type="file" id="postPhotoUpload" accept="image/*">
+                            <button class="photo-upload-btn" id="uploadPhotoBtn">📸 Foto</button>
+                            <span class="char-count" id="charCount">0/280</span>
+                        </div>
+                        <button class="btn" id="createPostBtn">Publicar</button>
+                    </div>
+                </div>
+
+                <div class="posts-container" id="postsContainer">
+                    <div class="loading">Cargando cotilleos...</div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN BÚSQUEDA -->
+            <div id="searchSection" class="search-section" style="display: none;">
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar usuarios...">
+                </div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+
+            <!-- SECCIÓN PERFIL -->
+            <div id="profileSection" style="display:none;">
+                <div class="profile-card">
+                    <div class="profile-pic-large" id="profilePicLarge">?</div>
+                    <div class="profile-username" id="profileUsername">Usuario</div>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <div class="stat-number" id="postsCount">0</div>
+                            <div class="stat-label">Cotilleos</div>
+                        </div>
+                        <div class="stat" id="followersBtn">
+                            <div class="stat-number" id="followersCount">0</div>
+                            <div class="stat-label">Seguidores</div>
+                        </div>
+                        <div class="stat" id="followingBtn">
+                            <div class="stat-number" id="followingCount">0</div>
+                            <div class="stat-label">Siguiendo</div>
+                        </div>
+                    </div>
+                    <div id="profileActions"></div>
+                </div>
+                <div class="posts-container" id="userPostsContainer"></div>
+            </div>
+        </div>
+
+        <!-- NAVEGACIÓN INFERIOR -->
+        <div class="bottom-nav">
+            <button class="nav-btn active" data-section="feed">🏠</button>
+            <button class="nav-btn" data-section="search">🔍</button>
+            <button class="nav-btn" data-section="profile">👤</button>
+        </div>
+    </div>
+
+    <!-- MODALES -->
+    <div class="modal" id="followModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">Usuarios</div>
+            <div id="modalUserList"></div>
+            <button class="close-modal" id="closeModalBtn">Cerrar</button>
+        </div>
+    </div>
+
+    <div class="modal" id="imageModal">
+        <button class="close-image-modal" id="closeImageModalBtn">×</button>
+        <div class="image-modal-content">
+            <img id="modalImage" src="" alt="Imagen">
+        </div>
+    </div>
+
+    <!-- FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+    <!-- SCRIPTS DE LA APP -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/posts.js"></script>
+    <script src="js/users.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
