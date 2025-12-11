@@ -137,6 +137,16 @@ async function showUserProfile(userId) {
         
         const user = userDoc.data();
         
+        // 🔧 ARREGLO: Recargar datos actuales del currentUser desde Firebase
+        if (!isOwnProfile) {
+            const currentUserDoc = await db.collection('users').doc(currentUser.uid).get();
+            if (currentUserDoc.exists) {
+                const freshData = currentUserDoc.data();
+                currentUser.following = freshData.following || [];
+                currentUser.followers = freshData.followers || [];
+            }
+        }
+        
         // Ocultar otras secciones
         document.getElementById('feedSection').style.display = 'none';
         document.getElementById('searchSection').style.display = 'none';
@@ -187,8 +197,8 @@ async function showUserProfile(userId) {
         } else {
             const isFollowing = currentUser.following && currentUser.following.includes(userId);
             actionsDiv.innerHTML = `
-                <button class="btn" onclick="toggleFollow('${userId}', this)">
-                    ${isFollowing ? 'Dejar de seguir' : 'Seguir'}
+                <button class="btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${userId}', this)">
+                    ${isFollowing ? 'Siguiendo' : 'Seguir'}
                 </button>
             `;
         }
@@ -207,7 +217,7 @@ async function showUserProfile(userId) {
 }
 
 // ========================================
-// TOGGLE FOLLOW
+// TOGGLE FOLLOW - 🔧 ARREGLADO
 // ========================================
 
 async function toggleFollow(userId, button) {
@@ -219,7 +229,12 @@ async function toggleFollow(userId, button) {
         const targetUserRef = db.collection('users').doc(userId);
         const currentUserRef = db.collection('users').doc(currentUser.uid);
         
-        const isFollowing = currentUser.following && currentUser.following.includes(userId);
+        // 🔧 ARREGLO: Obtener estado actual desde Firebase
+        const currentUserDoc = await currentUserRef.get();
+        const currentUserData = currentUserDoc.data();
+        const currentFollowing = currentUserData.following || [];
+        
+        const isFollowing = currentFollowing.includes(userId);
         
         if (isFollowing) {
             // Dejar de seguir
@@ -230,13 +245,15 @@ async function toggleFollow(userId, button) {
                 followers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
             });
             
-            // Actualizar localmente
-            currentUser.following = currentUser.following.filter(id => id !== userId);
+            // 🔧 ARREGLO: Actualizar localmente de forma correcta
+            currentUser.following = currentFollowing.filter(id => id !== userId);
             
             if (button) {
                 button.textContent = 'Seguir';
                 button.classList.remove('following');
             }
+            
+            showSuccess('Has dejado de seguir a este usuario');
             
         } else {
             // Seguir
@@ -247,19 +264,20 @@ async function toggleFollow(userId, button) {
                 followers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
             });
             
-            // Actualizar localmente
-            if (!currentUser.following) currentUser.following = [];
-            currentUser.following.push(userId);
+            // 🔧 ARREGLO: Actualizar localmente de forma correcta
+            currentUser.following = [...currentFollowing, userId];
             
             if (button) {
                 button.textContent = 'Siguiendo';
                 button.classList.add('following');
             }
+            
+            showSuccess('¡Ahora sigues a este usuario!');
         }
         
-        // Recargar perfil si estamos viéndolo
+        // 🔧 ARREGLO: Recargar perfil para actualizar contadores
         if (viewingUserId === userId) {
-            showUserProfile(userId);
+            await showUserProfile(userId);
         }
         
     } catch (error) {

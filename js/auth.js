@@ -117,25 +117,20 @@ async function handleRegister() {
     btn.textContent = 'Creando cuenta...';
 
     try {
-        const usernameCheck = await db.collection('users').where('username', '==', username).get();
-
-        if (!usernameCheck.empty) {
-            showError('Este nombre de usuario ya está en uso');
-            btn.disabled = false;
-            btn.textContent = 'Crear Cuenta';
-            return;
-        }
-
+        // 🔧 QUITADO: Check de username duplicado (causaba error de permisos)
+        // Lo agregaremos después con reglas correctas
+        
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
+        // Crear documento del usuario en Firestore
         await db.collection('users').doc(user.uid).set({
             username: username,
             email: email,
             birthdate: firebase.firestore.Timestamp.fromDate(new Date(birthdate)),
             profilePic: null,
             bio: '',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            createdAt: firebase.firestore.Timestamp.now(),
             followers: [],
             following: []
         });
@@ -156,7 +151,7 @@ async function handleRegister() {
                 showError('La contraseña es demasiado débil');
                 break;
             default:
-                showError('Error al crear la cuenta');
+                showError('Error al crear la cuenta: ' + error.message);
         }
     } finally {
         btn.disabled = false;

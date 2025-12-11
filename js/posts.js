@@ -4,6 +4,7 @@
 
 let tempPostPhoto = null;
 let postsListener = null;
+let commentsListeners = {}; // 🔧 NUEVO: Para listeners de comentarios
 
 function initPosts() {
     document.getElementById('uploadPhotoBtn').addEventListener('click', () => {
@@ -83,23 +84,12 @@ async function createPostElement(post) {
     const isFollowing = currentUser.following && currentUser.following.includes(post.userId);
     const isOwnPost = post.userId === currentUser.uid;
     
+    // 🔧 ARREGLO: Obtener conteo inicial de comentarios
     const commentsSnapshot = await db.collection('comments')
         .where('postId', '==', post.id)
         .get();
     
-    const comments = [];
-    commentsSnapshot.forEach(doc => {
-        comments.push({
-            id: doc.id,
-            ...doc.data()
-        });
-    });
-    
-    comments.sort((a, b) => {
-        const aTime = a.timestamp?.toMillis() || 0;
-        const bTime = b.timestamp?.toMillis() || 0;
-        return aTime - bTime;
-    });
+    const commentsCount = commentsSnapshot.size;
     
     let avatarHtml;
     if (post.profilePic) {
@@ -128,29 +118,6 @@ async function createPostElement(post) {
         `;
     }
     
-    let commentsHtml = '';
-    if (comments.length > 0) {
-        commentsHtml = comments.map(comment => {
-            let commentAvatar;
-            if (comment.profilePic) {
-                commentAvatar = `<img src="${comment.profilePic}" alt="${comment.username}">`;
-            } else {
-                commentAvatar = getInitials(comment.username);
-            }
-            
-            return `
-                <div class="comment">
-                    <div class="comment-avatar">${commentAvatar}</div>
-                    <div class="comment-content">
-                        <div class="comment-username">@${comment.username}</div>
-                        <div class="comment-text">${sanitizeText(comment.content)}</div>
-                        <div class="comment-time">${getTimeAgo(comment.timestamp)}</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-    
     div.innerHTML = `
         <div class="post-header">
             <div class="post-user" onclick="showUserProfile('${post.userId}')">
@@ -170,11 +137,13 @@ async function createPostElement(post) {
                 ${isLiked ? '❤️' : '🤍'} ${post.likes || 0}
             </button>
             <button class="action-btn" onclick="toggleComments('${post.id}')">
-                💬 ${comments.length}
+                💬 <span id="comment-count-${post.id}">${commentsCount}</span>
             </button>
         </div>
         <div class="comments-section" id="comments-${post.id}">
-            ${commentsHtml}
+            <div class="comments-list" id="comments-list-${post.id}">
+                <!-- Los comentarios se cargarán aquí en tiempo real -->
+            </div>
             <div class="comment-input-container">
                 <input type="text" 
                        class="comment-input" 
@@ -183,6 +152,79 @@ async function createPostElement(post) {
                        maxlength="200">
                 <button class="comment-btn" onclick="addComment('${post.id}')">Enviar</button>
             </div>
+        </div>
+    `;
+    
+    // 🔧 ARREGLO: Iniciar listener de comentarios para este post
+    setupCommentsListener(post.id);
+    
+    return div;
+}
+
+// 🔧 NUEVA FUNCIÓN: Listener en tiempo real para comentarios
+function setupCommentsListener(postId) {
+    // Si ya existe un listener para este post, lo cancelamos
+    if (commentsListeners[postId]) {
+        commentsListeners[postId]();
+    }
+    
+    // Crear nuevo listener
+    commentsListeners[postId] = db.collection('comments')
+        .where('postId', '==', postId)
+        .orderBy('timestamp', 'asc')
+        .onSnapshot((snapshot) => {
+            const commentsList = document.getElementById(`comments-list-${postId}`);
+            const commentCount = document.getElementById(`comment-count-${postId}`);
+            
+            if (!commentsList) return; // El elemento no existe (post eliminado)
+            
+            // Actualizar contador
+            if (commentCount) {
+                commentCount.textContent = snapshot.size;
+            }
+            
+            // Renderizar comentarios
+            if (snapshot.empty) {
+                commentsList.innerHTML = '';
+                return;
+            }
+            
+            commentsList.innerHTML = '';
+            
+            snapshot.forEach(doc => {
+                const comment = doc.data();
+                const commentEl = createCommentElement(comment);
+                commentsList.appendChild(commentEl);
+            });
+            
+            // Auto-scroll al último comentario si la sección está abierta
+            const commentsSection = document.getElementById(`comments-${postId}`);
+            if (commentsSection && commentsSection.classList.contains('active')) {
+                commentsList.scrollTop = commentsList.scrollHeight;
+            }
+        }, (error) => {
+            console.error('Error al cargar comentarios:', error);
+        });
+}
+
+// 🔧 NUEVA FUNCIÓN: Crear elemento de comentario
+function createCommentElement(comment) {
+    const div = document.createElement('div');
+    div.className = 'comment';
+    
+    let commentAvatar;
+    if (comment.profilePic) {
+        commentAvatar = `<img src="${comment.profilePic}" alt="${comment.username}">`;
+    } else {
+        commentAvatar = getInitials(comment.username);
+    }
+    
+    div.innerHTML = `
+        <div class="comment-avatar">${commentAvatar}</div>
+        <div class="comment-content">
+            <div class="comment-username">@${comment.username}</div>
+            <div class="comment-text">${sanitizeText(comment.content)}</div>
+            <div class="comment-time">${getTimeAgo(comment.timestamp)}</div>
         </div>
     `;
     
@@ -304,6 +346,14 @@ function toggleComments(postId) {
     if (commentsSection.classList.contains('active')) {
         const input = document.getElementById(`comment-input-${postId}`);
         setTimeout(() => input.focus(), 100);
+        
+        // 🔧 ARREGLO: Auto-scroll a los comentarios
+        const commentsList = document.getElementById(`comments-list-${postId}`);
+        if (commentsList) {
+            setTimeout(() => {
+                commentsList.scrollTop = commentsList.scrollHeight;
+            }, 200);
+        }
     }
 }
 
@@ -313,7 +363,10 @@ async function addComment(postId) {
     
     if (!content) return;
     
+    // 🔧 ARREGLO: Deshabilitar input mientras se envía
     input.disabled = true;
+    const originalValue = content;
+    input.value = 'Enviando...';
     
     try {
         await db.collection('comments').add({
@@ -327,11 +380,15 @@ async function addComment(postId) {
         
         input.value = '';
         
+        // 🔧 ARREGLO: El listener actualizará automáticamente los comentarios
+        
     } catch (error) {
         console.error('Error al añadir comentario:', error);
         showError('Error al comentar');
+        input.value = originalValue; // Restaurar el texto si falla
     } finally {
         input.disabled = false;
+        input.focus();
     }
 }
 
@@ -378,4 +435,14 @@ async function loadUserPosts(userId) {
             </div>
         `;
     }
+}
+
+// 🔧 NUEVA FUNCIÓN: Limpiar listeners cuando sea necesario
+function cleanupCommentsListeners() {
+    Object.keys(commentsListeners).forEach(postId => {
+        if (commentsListeners[postId]) {
+            commentsListeners[postId]();
+        }
+    });
+    commentsListeners = {};
 }
